@@ -1,0 +1,80 @@
+@Entity
+public class Transacao 
+{
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id;
+   private String descricao;
+   private BigDecimal valor;
+   private LocalDate data;
+   // getters e setters
+}
+
+@Repository
+public interface TransacaoRepository extends JpaRepository<Transacao, Long> 
+{
+
+}
+
+@RestController
+@RequestMapping("/api/transacoes")
+public class TransacaoController 
+{
+    @Autowired
+    private TransacaoService transacaoService;
+
+   //Aqui, estamos definindo um controlador REST para lidar com as transações financeiras.
+   //A anotação (@RestController) indica que a classe é um controlador REST e a anotação
+   //(@RequestMapping) define o caminho base da rota para a API, que será /api/transacoes.
+   //Também estamos injetando uma instância da classe (TransacaoService) usando a anotação @Autowired.
+
+   @GetMapping
+    public List<Transacao> listarTransacoes() 
+    {
+        return transacaoService.listarTransacoes();
+    }
+   //Este método GET retorna uma lista de todas as transações registradas na API. A anotação 
+   //@GetMapping indica que este método trata uma solicitação GET e não recebe nenhum parâmetro.
+   //Ele simplesmente chama o método (listarTransacoes) do (TransacaoService) e retorna a lista de transações.
+
+   @PostMapping
+    public ResponseEntity<Transacao> criarTransacao(@RequestBody Transacao transacao) 
+    {
+        Transacao novaTransacao = transacaoService.criarTransacao(transacao);
+        URI uri = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(novaTransacao.getId()).toUri();
+        return ResponseEntity.created(uri).body(novaTransacao);
+    }
+    //Este método POST é usado para criar uma nova transação. Ele recebe um objeto Transacao no corpo da 
+    //solicitação (usando a anotação @RequestBody) e retorna um objeto (ResponseEntity) contendo a nova transação criada.
+    //Primeiro, o método cria uma nova transação chamando o método (criarTransacao) do (transacaoService).
+    //Em seguida, ele constrói a URI da nova transação usando a classe (ServletUriComponentsBuilder).
+    //A URI é criada com base na URI atual (currentRequest), adicionando o ID da nova transação criada ao final da rota (path("/{id}").
+    //buildAndExpand(novaTransacao.getId())) e, em seguida, convertida para um objeto URI.
+    //resumindo o método retorna uma resposta com o status (Created) e a nova transação criada no corpo da resposta (body(novaTransacao)).
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Transacao> atualizarTransacao(@PathVariable Long id, @RequestBody Transacao transacao) 
+    {
+        Transacao transacaoAtualizada = transacaoService.atualizarTransacao(id, transacao);
+        return ResponseEntity.ok(transacaoAtualizada);
+    }
+    //Este método PUT é usado para atualizar uma transação existente
+    //Ele recebe o ID da transação a ser atualizada no caminho da rota (usando a anotação @PathVariable)
+    // e um objeto Transacao no corpo da solicitação (usando a anotação @RequestBody).
+    //Ele retorna um objeto ResponseEntity contendo a transação atualizada e o status (OK).
+
+    //O método chama o método (atualizarTransacao) do (TransacaoService), passando o ID da transação e o objeto Transacao atualizado.
+    //E então em seguida, retorna uma resposta com o status (ok) e a transação atualizada no corpo da resposta.
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluirTransacao(@PathVariable Long id) 
+    {
+        transacaoService.excluirTransacao(id);
+        return ResponseEntity.noContent().build();
+    }
+    //Este método DELETE é usado para excluir uma transação existente.
+    // Ele recebe o ID da transação a ser excluída no caminho da rota (usando a anotação @PathVariable)
+    //e retorna um objeto ResponseEntity com o status (No Content).
+    //O método chama o método (excluirTransacao) do (TransacaoService), passando o ID da transação a ser excluída
+    //E então em seguida, retorna uma resposta com o status (No Content), sem conteúdo no corpo da resposta.
+}
